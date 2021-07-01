@@ -1,0 +1,27 @@
+#!/bin/bash
+#Goal: identify the 3 highest occuring motifs in each exome inside the exomes folder
+#Goal: outputs headers and sequences into a few file called exomename_topmotifs.fasta
+
+for f in ./exomes/*.fasta
+do
+    #reads in the motifs list and counts the number of occurrences in the fasta file
+    while IFS= read -r line
+    do
+         count=$(grep -o "$line" ${f} | wc -l | sed 's/ //g') #stores the count of each motif in variable count
+         echo "$line" "$count" >> "$f"motifcount.txt #echoes the motif sequences and count number to new text file
+    done < '/home/rbif/week4/motif_list.txt'
+
+    #sort motifcount highest to lowest and print the top three motifs (without counts) to a new file topmotifs
+    sort -k2 -rn "$f"motifcount.txt | head -3 | cut -f1 -d' ' >> "$f"topmotifs.txt
+
+    #extracts sequences with gene number that contain any of the three motifs, sends them to new file 
+    while IFS= read -r line
+    do
+        filename=$(basename ${f} .fasta)
+        grep -B1 "$line" ${f} | sed 's/--/\t/g' | sed '/^[[:space:]]*$/d' >> ${filename}_topmotif.fasta
+    done < "$f"topmotifs.txt
+
+rm "$f"motifcount.txt
+rm "$f"topmotifs.txt
+
+done
