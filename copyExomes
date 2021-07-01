@@ -1,0 +1,16 @@
+#!/bin/bash
+#Goal: Read in clinical data file clinical_data.txt and identify the samples that have a diameter between 20 and 30 mm long (inclusive) and have their genomes sequenced
+#Goal: Copy the identified exomes using the sample code names to a new directory called exomes.
+
+#Generates a list of sample code names based on samples that are sequenced and have a length of 20-30 mm (inclusive), saves as file 'codenames.txt'
+grep -wE '(2[0-9]|30)' '/home/rbif/week4/clinical_data.txt' | grep 'Sequenced' | cut -f6 > 'codenames.txt'
+
+#Makes new directory called exomes only if one does not exist already
+mkdir -p exomes
+
+#Finds files from source directory (exomes) and copies those files to the new directory exomes
+while IFS= read -r line
+do
+    find /home/rbif/week4/exomes -type f -name "$line.fasta" -exec cp {} ./exomes \;
+done < 'codenames.txt'
+rm 'codenames.txt'
