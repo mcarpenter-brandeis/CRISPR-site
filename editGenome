@@ -1,0 +1,12 @@
+#!/bin/bash
+#Goal: Insert the letter A right before the NGG site
+#Goal: Output a new file called exomename_postcrispr.fasta
+
+mkdir -p postcrispr
+
+for f in ./*_precrispr.fasta
+do
+    filename=$(basename ${f} _precrispr.fasta)
+    sed -r "s/([ACTG]{21,})(GG)/\1A\2/" ${f} > ${filename}_postcrispr.fasta
+    mv ${filename}_postcrispr.fasta ./postcrispr
+done
