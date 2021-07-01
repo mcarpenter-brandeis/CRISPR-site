@@ -1,0 +1,9 @@
+#!/bin/bash
+#Goal: For each gene in the exomename_topmotifs.fasta files, identify a suitable CRISPR site
+#Goal: Output suitable candidate sites (headers and sequences) to a new file called exomenames_precrispr.fasta
+
+for f in ./*_topmotif.fasta
+do
+    filename=$(basename ${f} _topmotif.fasta)
+    egrep --no-group-separator -B1 '[ACGT]{21,}GG' ${f} > ${filename}_precrispr.fasta
+done
