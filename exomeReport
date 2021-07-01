@@ -1,0 +1,78 @@
+#!/usr/bin/env python
+#Goal: Report summary of findings including the name of the discoverer, diameter, code name and environment
+#Goal: Along with how many genes the organism has in common with all other organisms, and which genes are unique to the organism
+
+import os
+
+#defining function create_set to generate sets of crispr genes from files
+def create_set(crispr):
+    s = set()
+    with open(crispr) as f:
+        for line in f:
+            if 'gene' in line:
+                for char in line:
+                    if char in ">":
+                        line = line.replace(char,'')
+                        modline = line.rstrip('\n')
+                        s.add(modline)
+    return s
+
+#generating empty dictionary animaldict
+animaldict = {}
+
+#reading in files from exomes folder to extract the exome names
+with os.scandir('exomes/') as entries:
+    for entry in entries:
+        base = os.path.basename(entry.name)
+        exome = os.path.splitext(base)[0] 
+
+        #using the exome names to search for data in the reference clinical_data file
+        clinicaldata = open("/home/rbif/week4/clinical_data.txt", "r")
+
+        for line in clinicaldata:
+            if exome in line:
+                #extracting the discoverer name and saving as variable
+                discoverer = line.split()[0]
+
+                #extracting diameter by filtering for digits in the string and saving as variable
+                diameter = int(''.join(filter(str.isdigit, line)))
+
+                #populating animal dictionary keyed by the exome
+                animaldict[exome] = [discoverer,diameter]
+
+                fastafile = 'postcrispr/%s_postcrispr.fasta' % exome
+
+                assert os.path.exists(fastafile)
+
+                #applying create_set function
+                a = create_set(fastafile)
+
+                #appending the dictionary keyed by exomes with the fasta file information
+                animaldict[exome].append(a)
+
+#opens output file
+exomeReport = open("exomeReport.txt","w")
+
+#looping through the animal dictionary to determine common (intersection) and unique genes for each exome (animal)
+for i in animaldict:
+
+    #generate new empty set called common to contain common genes
+    common = set()
+
+    #for each animal in the dictionary not including itself ...
+    for j in animaldict:
+        if i != j:
+            common.update(animaldict[i][2].intersection(animaldict[j][2]))
+    count = len(common)
+
+    #generating the list of unqiue genes for each animal in the dictionary
+    unique = animaldict[i][2] - common
+
+    #appends the dictionary keyed by i with the count (index 4), then the unique genes (index 5)
+    animaldict[i].append(count)
+    animaldict[i].append(unique)
+
+    #prints final output to text file
+    exomeReport.write("Organism {} was discovered by {}, has a diameter of {}mm, has {} genes in common with the cohort and the following genes unique to itself: {} \n".format(i, animaldict[i][0], animaldict[i][1], animaldict[i][3], animaldict[i][4]))
+
+exomeReport.close()
