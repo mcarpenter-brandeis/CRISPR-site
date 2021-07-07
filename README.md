@@ -1,4 +1,4 @@
-# Sample-Crispr
+# CRISPR
 
 #Author: Meredith Carpenter
 
